@@ -3,15 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { CommentSection } from './CommentSection';
 
 interface PostCardProps {
   post: {
     id: string;
     content: string;
+    image_url: string | null;
     created_at: string;
+    user_id: string;
     profiles: {
       username: string;
       avatar_url: string | null;
@@ -75,26 +78,34 @@ export const PostCard = ({ post, currentUserId, onPostDeleted }: PostCardProps) 
           </p>
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="whitespace-pre-wrap">{post.content}</p>
+      <CardContent className="space-y-4">
+        {post.content && <p className="whitespace-pre-wrap">{post.content}</p>}
+        {post.image_url && (
+          <img 
+            src={post.image_url} 
+            alt="Post content" 
+            className="w-full rounded-lg max-h-96 object-cover"
+          />
+        )}
       </CardContent>
-      <CardFooter className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLike}
-          className={liked ? 'text-destructive' : ''}
-        >
-          <Heart className={`w-4 h-4 mr-2 ${liked ? 'fill-current' : ''}`} />
-          {likeCount}
-        </Button>
-        <Button variant="ghost" size="sm">
-          <MessageCircle className="w-4 h-4 mr-2" />
-          {post.comments.length}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={handleDelete} className="ml-auto">
-          <Trash2 className="w-4 h-4" />
-        </Button>
+      <CardFooter className="flex flex-col gap-4">
+        <div className="flex items-center gap-4 w-full">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLike}
+            className={liked ? 'text-destructive' : ''}
+          >
+            <Heart className={`w-4 h-4 mr-2 ${liked ? 'fill-current' : ''}`} />
+            {likeCount}
+          </Button>
+          {post.user_id === currentUserId && (
+            <Button variant="ghost" size="sm" onClick={handleDelete} className="ml-auto">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+        <CommentSection postId={post.id} />
       </CardFooter>
     </Card>
   );
