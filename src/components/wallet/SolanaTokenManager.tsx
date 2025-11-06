@@ -8,6 +8,7 @@ import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 import { toast } from 'sonner';
 import { Plus, Send } from 'lucide-react';
 import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { validateSolanaAddress } from '@/utils/walletValidation';
 
 // Common SPL tokens on Solana
 const COMMON_TOKENS = [
@@ -37,6 +38,10 @@ export const SolanaTokenManager = () => {
       return;
     }
 
+    if (!validateSolanaAddress(newTokenMint)) {
+      return;
+    }
+
     try {
       const newToken: SolanaToken = {
         symbol: 'CUSTOM',
@@ -56,6 +61,15 @@ export const SolanaTokenManager = () => {
   const sendToken = async () => {
     if (!selectedToken || !sendAddress || !sendAmount || !publicKey) {
       toast.error('Please fill all fields and connect wallet');
+      return;
+    }
+
+    if (!validateSolanaAddress(sendAddress)) {
+      return;
+    }
+
+    const confirmMessage = `Send ${sendAmount} ${selectedToken.symbol} to ${sendAddress.slice(0, 6)}...${sendAddress.slice(-4)}?`;
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 

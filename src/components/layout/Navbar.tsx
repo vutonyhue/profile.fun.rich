@@ -28,10 +28,10 @@ export const Navbar = () => {
       <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
         <div className="flex items-center gap-2 sm:gap-6 min-w-0 flex-1">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <img src="/logo.jpg" alt="F.U. Profile" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0" />
+            <img src="/fun-profile-logo.jpg" alt="FUN Profile" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0" />
             <h1 className="text-base sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent truncate">
-              <span className="hidden sm:inline">F.U. Profile</span>
-              <span className="sm:hidden">F.U.</span>
+              <span className="hidden sm:inline">FUN Profile</span>
+              <span className="sm:hidden">FUN</span>
             </h1>
           </div>
           <div className="hidden md:flex items-center gap-2">

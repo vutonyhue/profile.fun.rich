@@ -10,7 +10,15 @@ import { z } from 'zod';
 const authSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  username: z.string().min(3, 'Username must be at least 3 characters').optional(),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(30, 'Username must be less than 30 characters')
+    .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/, 'Username must start with a letter and contain only letters, numbers, underscore, and hyphen')
+    .refine(
+      val => !['admin', 'administrator', 'system', 'root', 'moderator', 'mod', 'support', 'help'].includes(val.toLowerCase()),
+      { message: 'This username is reserved' }
+    )
+    .optional(),
 });
 
 export const AuthForm = () => {
@@ -64,7 +72,7 @@ export const AuthForm = () => {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-          {isLogin ? 'Welcome Back' : 'Join Web3 Social'}
+          {isLogin ? 'Welcome Back' : 'Join FUN Profile'}
         </CardTitle>
         <CardDescription>
           {isLogin ? 'Sign in to your account' : 'Create your account'}

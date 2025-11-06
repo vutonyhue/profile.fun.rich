@@ -29,8 +29,13 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <img 
+            src="/fun-profile-logo.jpg" 
+            alt="FUN Profile" 
+            className="w-24 h-24 mx-auto mb-4 rounded-full"
+          />
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Web3 Social
+            FUN Profile
           </h1>
           <p className="text-muted-foreground">Connect. Share. Earn.</p>
         </div>

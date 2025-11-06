@@ -7,6 +7,7 @@ import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi
 import { formatUnits, parseUnits } from 'viem';
 import { toast } from 'sonner';
 import { Plus, Send } from 'lucide-react';
+import { validateEvmAddress } from '@/utils/walletValidation';
 
 // ERC20 ABI for basic token operations
 const ERC20_ABI = [
@@ -79,6 +80,10 @@ export const TokenManager = () => {
       return;
     }
 
+    if (!validateEvmAddress(newTokenAddress)) {
+      return;
+    }
+
     try {
       const tokenAddress = newTokenAddress as `0x${string}`;
       
@@ -101,6 +106,15 @@ export const TokenManager = () => {
   const sendToken = async () => {
     if (!selectedToken || !sendAddress || !sendAmount) {
       toast.error('Please fill all fields');
+      return;
+    }
+
+    if (!validateEvmAddress(sendAddress)) {
+      return;
+    }
+
+    const confirmMessage = `Send ${sendAmount} ${selectedToken.symbol} to ${sendAddress.slice(0, 6)}...${sendAddress.slice(-4)}?`;
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
