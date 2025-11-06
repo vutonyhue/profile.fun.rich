@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Home, User, Wallet, LogOut, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { NotificationDropdown } from './NotificationDropdown';
+import { SearchDialog } from './SearchDialog';
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -61,6 +63,8 @@ export const Navbar = () => {
               <Wallet className="w-4 h-4" />
             </Button>
           </div>
+          <SearchDialog />
+          <NotificationDropdown />
           <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={toggleDarkMode}>
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>

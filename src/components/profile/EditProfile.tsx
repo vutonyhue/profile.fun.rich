@@ -13,10 +13,12 @@ import { AvatarCropper } from './AvatarCropper';
 export const EditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [coverUrl, setCoverUrl] = useState('');
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>('');
 
@@ -43,6 +45,7 @@ export const EditProfile = () => {
       setFullName(data.full_name || '');
       setBio(data.bio || '');
       setAvatarUrl(data.avatar_url || '');
+      setCoverUrl(data.cover_url || '');
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -103,6 +106,47 @@ export const EditProfile = () => {
     }
   };
 
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      setUploadingCover(true);
+      const file = event.target.files[0];
+
+      if (!userId) throw new Error('No user found');
+
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cover_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setCoverUrl(publicUrl);
+      toast.success('Ảnh bìa đã được cập nhật!');
+    } catch (error) {
+      console.error('Error uploading cover:', error);
+      toast.error('Lỗi khi tải ảnh bìa');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -139,14 +183,46 @@ export const EditProfile = () => {
           onCancel={() => setCropImage(null)}
         />
       )}
-      <Card>
+      <Card className="overflow-hidden">
+        <div className="relative">
+          {coverUrl && (
+            <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20">
+              <img 
+                src={coverUrl} 
+                alt="Cover" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          {!coverUrl && (
+            <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20" />
+          )}
+          <div className="absolute top-4 right-4">
+            <Label htmlFor="cover" className="cursor-pointer">
+              <Button type="button" variant="secondary" size="sm" disabled={uploadingCover} asChild>
+                <span>
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadingCover ? 'Đang tải...' : 'Đổi ảnh bìa'}
+                </span>
+              </Button>
+            </Label>
+            <Input
+              id="cover"
+              type="file"
+              accept="image/*"
+              onChange={handleCoverUpload}
+              className="hidden"
+              disabled={uploadingCover}
+            />
+          </div>
+        </div>
         <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
+          <CardTitle>Chỉnh sửa hồ sơ</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col items-center gap-4">
-              <Avatar className="w-32 h-32">
+              <Avatar className="w-32 h-32 -mt-20 border-4 border-background">
                 {avatarUrl && <AvatarImage src={avatarUrl} />}
                 <AvatarFallback className="text-4xl">
                   {username?.[0]?.toUpperCase() || 'U'}
@@ -157,7 +233,7 @@ export const EditProfile = () => {
                   <Button type="button" variant="outline" disabled={uploading} asChild>
                     <span>
                       <Upload className="w-4 h-4 mr-2" />
-                      {uploading ? 'Uploading...' : 'Upload Avatar'}
+                      {uploading ? 'Đang tải...' : 'Tải ảnh đại diện'}
                     </span>
                   </Button>
                 </Label>
@@ -172,37 +248,37 @@ export const EditProfile = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">Tên người dùng</Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
+                placeholder="Nhập tên người dùng"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">Họ và tên</Label>
               <Input
                 id="fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter full name"
+                placeholder="Nhập họ và tên"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio">Tiểu sử</Label>
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value.slice(0, 120))}
-                placeholder="Tell us about yourself (max 120 characters)"
+                placeholder="Giới thiệu về bạn (tối đa 120 ký tự)"
                 rows={4}
                 maxLength={120}
               />
-              <p className="text-xs text-muted-foreground">{bio.length}/120 characters</p>
+              <p className="text-xs text-muted-foreground">{bio.length}/120 ký tự</p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Profile'}
+              {loading ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
             </Button>
           </form>
         </CardContent>

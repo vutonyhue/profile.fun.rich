@@ -99,19 +99,31 @@ const Profile = () => {
       <Navbar />
       <main className="container max-w-4xl py-4 sm:py-8 px-4 sm:px-6">
         <div className="mb-6 sm:mb-8">
-          <Card>
-            <CardHeader className="text-center p-4 sm:p-6">
-              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4">
+          <Card className="overflow-hidden">
+            {profile?.cover_url && (
+              <div className="w-full h-32 sm:h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20">
+                <img 
+                  src={profile.cover_url} 
+                  alt="Cover" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            {!profile?.cover_url && (
+              <div className="w-full h-32 sm:h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20" />
+            )}
+            <CardHeader className="text-center p-4 sm:p-6 relative">
+              <Avatar className="w-20 h-20 sm:w-24 sm:h-24 mx-auto -mt-12 sm:-mt-16 mb-3 sm:mb-4 border-4 border-background">
                 {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
                 <AvatarFallback className="text-2xl sm:text-3xl">
                   {profile?.username?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <CardTitle className="text-xl sm:text-2xl">{profile?.username}</CardTitle>
-              <p className="text-sm sm:text-base text-muted-foreground">{profile?.full_name || 'No name set'}</p>
+              <p className="text-sm sm:text-base text-muted-foreground">{profile?.full_name || 'Chưa đặt tên'}</p>
             </CardHeader>
             <CardContent className="px-4 sm:px-6">
-              <p className="text-center text-sm sm:text-base break-words">{profile?.bio || 'No bio yet'}</p>
+              <p className="text-center text-sm sm:text-base break-words">{profile?.bio || 'Chưa có tiểu sử'}</p>
             </CardContent>
           </Card>
         </div>
