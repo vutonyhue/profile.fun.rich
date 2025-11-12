@@ -10,6 +10,7 @@ import { EditProfile } from '@/components/profile/EditProfile';
 import { PostCard } from '@/components/feed/PostCard';
 import { FriendRequestButton } from '@/components/friends/FriendRequestButton';
 import { FriendsList } from '@/components/friends/FriendsList';
+import { ProfileHonorBoard } from '@/components/profile/ProfileHonorBoard';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -115,9 +116,12 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container max-w-4xl py-4 sm:py-8 px-4 sm:px-6">
-        <div className="mb-6 sm:mb-8">
-          <Card className="overflow-hidden">
+      <main className="container max-w-7xl py-4 sm:py-8 px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Content - Left Side */}
+          <div className="lg:col-span-8">
+            <div className="mb-6 sm:mb-8">
+              <Card className="overflow-hidden">
             {profile?.cover_url && (
               <div className="w-full h-32 sm:h-48 bg-gradient-to-r from-primary/20 to-primary-glow/20">
                 <img 
@@ -149,9 +153,9 @@ const Profile = () => {
               <p className="text-center text-sm sm:text-base break-words">{profile?.bio || 'Chưa có tiểu sử'}</p>
             </CardContent>
           </Card>
-        </div>
+            </div>
 
-        <Tabs defaultValue="posts" className="w-full">
+            <Tabs defaultValue="posts" className="w-full">
           <TabsList className={`grid w-full ${isOwnProfile ? 'grid-cols-3' : 'grid-cols-1'} h-auto`}>
             <TabsTrigger value="posts" className="text-xs sm:text-sm py-2">{isOwnProfile ? 'My Posts' : 'Posts'}</TabsTrigger>
             {isOwnProfile && <TabsTrigger value="friends" className="text-xs sm:text-sm py-2">Friends</TabsTrigger>}
@@ -185,7 +189,18 @@ const Profile = () => {
               </TabsContent>
             </>
           )}
-        </Tabs>
+            </Tabs>
+          </div>
+
+          {/* Honor Board - Right Side */}
+          <div className="lg:col-span-4 hidden lg:block">
+            <ProfileHonorBoard 
+              userId={profile.id}
+              username={profile.username}
+              avatarUrl={profile.avatar_url}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
