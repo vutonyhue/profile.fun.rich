@@ -60,58 +60,52 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
   const fetchFriends = async () => {
     const { data, error } = await supabase
       .from("friendships")
-      .select(`
-        id,
-        user_id,
-        friend_id,
-        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
-      `)
+      .select("*")
       .eq("status", "accepted")
-      .eq("user_id", userId);
+      .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
 
     if (error) {
       console.error("Error fetching friends:", error);
+      setLoading(false);
       return;
     }
 
-    const { data: data2, error: error2 } = await supabase
-      .from("friendships")
-      .select(`
-        id,
-        user_id,
-        friend_id,
-        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
-      `)
-      .eq("status", "accepted")
-      .eq("friend_id", userId);
+    if (!data) {
+      setFriends([]);
+      setLoading(false);
+      return;
+    }
 
-    const friendsList: Friend[] = [];
-    
-    data?.forEach((friendship: any) => {
-      const profile = friendship.profiles;
-      if (profile) {
-        friendsList.push({
-          id: profile.id,
-          username: profile.username,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          friendship_id: friendship.id
-        });
-      }
-    });
+    // Get all unique user IDs (excluding current user)
+    const userIds = data.map(f => 
+      f.user_id === userId ? f.friend_id : f.user_id
+    );
 
-    data2?.forEach((friendship: any) => {
-      const profile = friendship.profiles;
-      if (profile) {
-        friendsList.push({
-          id: profile.id,
-          username: profile.username,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          friendship_id: friendship.id
-        });
-      }
-    });
+    // Fetch all profiles in one query
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url")
+      .in("id", userIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      setLoading(false);
+      return;
+    }
+
+    // Map profiles to friends with friendship_id
+    const friendsList: Friend[] = data.map(friendship => {
+      const friendId = friendship.user_id === userId ? friendship.friend_id : friendship.user_id;
+      const profile = profilesData?.find(p => p.id === friendId);
+      
+      return {
+        id: profile?.id || friendId,
+        username: profile?.username || "Unknown",
+        full_name: profile?.full_name || "",
+        avatar_url: profile?.avatar_url || "",
+        friendship_id: friendship.id
+      };
+    }).filter(f => f.username !== "Unknown");
 
     setFriends(friendsList);
     setLoading(false);
@@ -120,11 +114,7 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
   const fetchPendingRequests = async () => {
     const { data, error } = await supabase
       .from("friendships")
-      .select(`
-        id,
-        user_id,
-        profiles!friendships_user_id_fkey(id, username, full_name, avatar_url)
-      `)
+      .select("*")
       .eq("status", "pending")
       .eq("friend_id", userId);
 
@@ -133,13 +123,33 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       return;
     }
 
-    const requests: Friend[] = data?.map((friendship: any) => ({
-      id: friendship.profiles.id,
-      username: friendship.profiles.username,
-      full_name: friendship.profiles.full_name,
-      avatar_url: friendship.profiles.avatar_url,
-      friendship_id: friendship.id
-    })) || [];
+    if (!data || data.length === 0) {
+      setPendingRequests([]);
+      return;
+    }
+
+    // Get sender profiles
+    const userIds = data.map(f => f.user_id);
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url")
+      .in("id", userIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      return;
+    }
+
+    const requests: Friend[] = data.map(friendship => {
+      const profile = profilesData?.find(p => p.id === friendship.user_id);
+      return {
+        id: profile?.id || friendship.user_id,
+        username: profile?.username || "Unknown",
+        full_name: profile?.full_name || "",
+        avatar_url: profile?.avatar_url || "",
+        friendship_id: friendship.id
+      };
+    }).filter(f => f.username !== "Unknown");
 
     setPendingRequests(requests);
   };
@@ -147,11 +157,7 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
   const fetchSentRequests = async () => {
     const { data, error } = await supabase
       .from("friendships")
-      .select(`
-        id,
-        friend_id,
-        profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
-      `)
+      .select("*")
       .eq("status", "pending")
       .eq("user_id", userId);
 
@@ -160,13 +166,33 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       return;
     }
 
-    const requests: Friend[] = data?.map((friendship: any) => ({
-      id: friendship.profiles.id,
-      username: friendship.profiles.username,
-      full_name: friendship.profiles.full_name,
-      avatar_url: friendship.profiles.avatar_url,
-      friendship_id: friendship.id
-    })) || [];
+    if (!data || data.length === 0) {
+      setSentRequests([]);
+      return;
+    }
+
+    // Get recipient profiles
+    const friendIds = data.map(f => f.friend_id);
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url")
+      .in("id", friendIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      return;
+    }
+
+    const requests: Friend[] = data.map(friendship => {
+      const profile = profilesData?.find(p => p.id === friendship.friend_id);
+      return {
+        id: profile?.id || friendship.friend_id,
+        username: profile?.username || "Unknown",
+        full_name: profile?.full_name || "",
+        avatar_url: profile?.avatar_url || "",
+        friendship_id: friendship.id
+      };
+    }).filter(f => f.username !== "Unknown");
 
     setSentRequests(requests);
   };
