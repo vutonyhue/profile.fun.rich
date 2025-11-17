@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserMinus, UserCheck, X } from "lucide-react";
+import { UserMinus, UserCheck, X, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +25,7 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [sentRequests, setSentRequests] = useState<Friend[]>([]);
+  const [suggestions, setSuggestions] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -32,6 +33,7 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
     fetchFriends();
     fetchPendingRequests();
     fetchSentRequests();
+    fetchSuggestions();
     
     // Set up realtime subscription for friendships
     const channel = supabase
@@ -48,6 +50,7 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
           fetchFriends();
           fetchPendingRequests();
           fetchSentRequests();
+          fetchSuggestions();
         }
       )
       .subscribe();
@@ -258,6 +261,61 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
     }
   };
 
+  const fetchSuggestions = async () => {
+    // Get all user IDs that have any friendship relation with current user
+    const { data: existingRelations } = await supabase
+      .from("friendships")
+      .select("user_id, friend_id")
+      .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
+
+    const excludedUserIds = new Set([userId]);
+    existingRelations?.forEach(rel => {
+      excludedUserIds.add(rel.user_id);
+      excludedUserIds.add(rel.friend_id);
+    });
+
+    // Fetch users who are not friends or have no pending requests
+    const { data: profilesData, error } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url")
+      .not("id", "in", `(${Array.from(excludedUserIds).join(',')})`)
+      .limit(10);
+
+    if (error) {
+      console.error("Error fetching suggestions:", error);
+      return;
+    }
+
+    const suggestionsList: Friend[] = (profilesData || []).map(profile => ({
+      id: profile.id,
+      username: profile.username,
+      full_name: profile.full_name || "",
+      avatar_url: profile.avatar_url || "",
+      friendship_id: ""
+    }));
+
+    setSuggestions(suggestionsList);
+  };
+
+  const handleSendRequest = async (targetUserId: string) => {
+    const { error } = await supabase
+      .from("friendships")
+      .insert({
+        user_id: userId,
+        friend_id: targetUserId,
+        status: "pending"
+      });
+
+    if (error) {
+      toast.error("Failed to send friend request");
+      console.error(error);
+    } else {
+      toast.success("Friend request sent!");
+      fetchSuggestions();
+      fetchSentRequests();
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -265,12 +323,13 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="friends">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="friends">Friends ({friends.length})</TabsTrigger>
             <TabsTrigger value="requests">
               Requests ({pendingRequests.length})
             </TabsTrigger>
             <TabsTrigger value="sent">Sent ({sentRequests.length})</TabsTrigger>
+            <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="friends">
@@ -298,8 +357,9 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleUnfriend(friend.friendship_id)}
+                        className="text-primary hover:bg-primary hover:text-white group"
                       >
-                        <UserMinus className="w-4 h-4" />
+                        <UserMinus className="w-4 h-4 text-gold group-hover:text-white" />
                       </Button>
                     </div>
                   ))}
@@ -333,15 +393,17 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
                         <Button
                           size="sm"
                           onClick={() => handleAccept(request.friendship_id)}
+                          className="text-primary hover:bg-primary hover:text-white group bg-background border border-input"
                         >
-                          <UserCheck className="w-4 h-4" />
+                          <UserCheck className="w-4 h-4 text-gold group-hover:text-white" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleReject(request.friendship_id)}
+                          className="text-primary hover:bg-primary hover:text-white group"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-4 h-4 text-gold group-hover:text-white" />
                         </Button>
                       </div>
                     </div>
@@ -376,8 +438,44 @@ export const FriendsList = ({ userId }: FriendsListProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCancelRequest(request.friendship_id)}
+                        className="text-primary hover:bg-primary hover:text-white group"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 text-gold group-hover:text-white" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="suggestions">
+            <ScrollArea className="h-[400px]">
+              {suggestions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No suggestions available</p>
+              ) : (
+                <div className="space-y-4">
+                  {suggestions.map((suggestion) => (
+                    <div key={suggestion.id} className="flex items-center justify-between">
+                      <div 
+                        className="flex items-center gap-3 cursor-pointer flex-1"
+                        onClick={() => navigate(`/profile?userId=${suggestion.id}`)}
+                      >
+                        <Avatar>
+                          <AvatarImage src={suggestion.avatar_url} />
+                          <AvatarFallback>{suggestion.username?.[0]?.toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{suggestion.username}</p>
+                          <p className="text-sm text-muted-foreground">{suggestion.full_name}</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSendRequest(suggestion.id)}
+                        className="text-primary hover:bg-primary hover:text-white group bg-background border border-input"
+                      >
+                        <UserPlus className="w-4 h-4 text-gold group-hover:text-white" />
                       </Button>
                     </div>
                   ))}

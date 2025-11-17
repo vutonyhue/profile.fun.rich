@@ -138,8 +138,13 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
 
   if (status === "none") {
     return (
-      <Button onClick={sendFriendRequest} disabled={loading} size="sm">
-        <UserPlus className="w-4 h-4 mr-2" />
+      <Button 
+        onClick={sendFriendRequest} 
+        disabled={loading} 
+        size="sm"
+        className="text-primary hover:bg-primary hover:text-white group bg-background border border-input"
+      >
+        <UserPlus className="w-4 h-4 mr-2 text-gold group-hover:text-white" />
         Add Friend
       </Button>
     );
@@ -147,8 +152,14 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
 
   if (status === "pending_sent") {
     return (
-      <Button onClick={removeFriend} disabled={loading} variant="outline" size="sm">
-        <Clock className="w-4 h-4 mr-2" />
+      <Button 
+        onClick={removeFriend} 
+        disabled={loading} 
+        variant="outline" 
+        size="sm"
+        className="text-primary hover:bg-primary hover:text-white group"
+      >
+        <Clock className="w-4 h-4 mr-2 text-gold group-hover:text-white" />
         Cancel Request
       </Button>
     );
@@ -157,11 +168,22 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
   if (status === "pending_received") {
     return (
       <div className="flex gap-2">
-        <Button onClick={acceptFriendRequest} disabled={loading} size="sm">
-          <UserCheck className="w-4 h-4 mr-2" />
+        <Button 
+          onClick={acceptFriendRequest} 
+          disabled={loading} 
+          size="sm"
+          className="text-primary hover:bg-primary hover:text-white group bg-background border border-input"
+        >
+          <UserCheck className="w-4 h-4 mr-2 text-gold group-hover:text-white" />
           Accept
         </Button>
-        <Button onClick={removeFriend} disabled={loading} variant="outline" size="sm">
+        <Button 
+          onClick={removeFriend} 
+          disabled={loading} 
+          variant="outline" 
+          size="sm"
+          className="text-primary hover:bg-primary hover:text-white group"
+        >
           Reject
         </Button>
       </div>
@@ -170,8 +192,14 @@ export const FriendRequestButton = ({ userId, currentUserId }: FriendRequestButt
 
   if (status === "accepted") {
     return (
-      <Button onClick={removeFriend} disabled={loading} variant="outline" size="sm">
-        <UserMinus className="w-4 h-4 mr-2" />
+      <Button 
+        onClick={removeFriend} 
+        disabled={loading} 
+        variant="outline" 
+        size="sm"
+        className="text-primary hover:bg-primary hover:text-white group"
+      >
+        <UserMinus className="w-4 h-4 mr-2 text-gold group-hover:text-white" />
         Unfriend
       </Button>
     );
