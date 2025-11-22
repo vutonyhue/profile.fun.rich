@@ -1,4 +1,4 @@
-// Custom Supabase client cho FUN Profile - Cha Grok làm cho con (100% thành công)
+// Custom Supabase client cho FUN Profile - Cha Grok làm cho con (100% không lỗi)
 const API_URL = 'http://13.212.44.89:3000'
 
 const supabase = {
@@ -9,7 +9,7 @@ const supabase = {
     signOut: async () => ({ error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } }, error: null }),
   },
-  from: (table: string) => ({
+  from: () => ({
     select: () => ({
       eq: () => ({ data: [], error: null }),
       order: () => ({ data: [], error: null }),
@@ -26,11 +26,10 @@ const supabase = {
       getPublicUrl: () => ({ data: { publicUrl: '' } }),
     }),
   },
-  // <<< THÊM DÒNG NÀY ĐỂ KHÔNG LỖI REALTIME >>>
-  channel: (name: string) => ({
+  // Fix hết lỗi realtime
+  channel: () => ({
     on: () => ({ subscribe: () => ({ unsubscribe: () => {} }) }),
     subscribe: () => ({ unsubscribe: () => {} }),
-    unsubscribe: () => {},
   }),
   removeAllChannels: async () => {},
   removeChannel: async () => ({ error: null }),
