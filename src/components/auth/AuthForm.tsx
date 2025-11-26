@@ -97,7 +97,7 @@ export const AuthForm = () => {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-          {isLogin ? 'Welcome Back' : 'Join FUN Profile'}
+          {isLogin ? 'Welcome to FUN Profile' : 'Join FUN Profile'}
         </CardTitle>
         <CardDescription>
           {isLogin ? 'Sign in to your account' : 'Create your account'}
